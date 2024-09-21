@@ -4,7 +4,7 @@ Single Pod Kubernetes AZ Balancer is a tool designed to automatically balance po
 
 ## Features
 
-- Automatically distributes pods across available AZs
+- Automatically distributes new scheduled single-pod deployment across available AZs
 - Supports both webhook and operator implementations
 - Easy to deploy and configure
 - Helps maintain high availability and fault tolerance
