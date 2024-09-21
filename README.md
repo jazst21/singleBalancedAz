@@ -1,6 +1,6 @@
 # Kubernetes AZ Balancer
 
-Kubernetes AZ Balancer is a tool designed to automatically balance pod deployments across multiple Availability Zones (AZs) in a Kubernetes cluster. It comes in two flavors: a Mutating Admission Webhook and a Kubernetes Operator.
+Single Pod Kubernetes AZ Balancer is a tool designed to automatically balance pod deployments which has only 1 replica across multiple Availability Zones (AZs) in a Kubernetes cluster. It comes in two flavors: a Mutating Admission Webhook and a Kubernetes Operator.
 
 ## Features
 
