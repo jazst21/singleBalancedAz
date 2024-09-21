@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: az-balancer-operator
+  labels:
+    app: az-balancer-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: az-balancer-operator
+  template:
+    metadata:
+      labels:
+        app: az-balancer-operator
+    spec:
+      serviceAccountName: az-balancer-operator
+      containers:
+      - name: az-balancer-operator
+        image: your-registry/az-balancer-operator:latest  # Replace with your actual image
+        imagePullPolicy: Always
+        resources:
+          limits:
+            cpu: 200m
+            memory: 256Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+        env:
+        - name: KOPF_NAMESPACE
+          value: ""  # Empty string means watch all namespaces
+        - name: KOPF_STANDALONE
+          value: "true"
+        - name: KOPF_LIVENESS
+          value: "/healthz"
+        ports:
+        - containerPort: 8080
+          name: healthz
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 20
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+          initialDelaySeconds: 20
+          periodSeconds: 10

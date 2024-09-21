@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: az-balancing-webhook
+  labels:
+    app: az-balancing-webhook
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: az-balancing-webhook
+  template:
+    metadata:
+      labels:
+        app: az-balancing-webhook
+    spec:
+      containers:
+      - name: az-balancing-webhook
+        image: your-registry/az-balancing-webhook:latest
+        ports:
+        - containerPort: 8443
+        volumeMounts:
+        - name: tls-certs
+          mountPath: "/certs"
+          readOnly: true
+      volumes:
+      - name: tls-certs
+        secret:
+          secretName: az-balancing-webhook-tls
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: az-balancing-webhook-svc
+spec:
+  selector:
+    app: az-balancing-webhook
+  ports:
+  - port: 443
+    targetPort: 8443

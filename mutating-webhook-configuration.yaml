@@ -1,0 +1,20 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: az-balancing-webhook
+webhooks:
+- name: az-balancing.example.com
+  clientConfig:
+    service:
+      name: az-balancing-webhook-svc
+      namespace: default
+      path: "/mutate"
+    caBundle: {{ CA_BUNDLE }}
+  rules:
+  - apiGroups: [""]
+    apiVersions: ["v1"]
+    operations: ["CREATE"]
+    resources: ["pods"]
+  admissionReviewVersions: ["v1"]
+  sideEffects: None
+  timeoutSeconds: 5
