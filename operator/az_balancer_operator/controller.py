@@ -3,6 +3,7 @@ from .crd import AZBalancer
 
 config.load_incluster_config()
 v1 = client.CoreV1Api()
+apps_v1 = client.AppsV1Api()
 
 def get_pod_az_distribution():
     az_distribution = {}
@@ -21,6 +22,12 @@ def select_balanced_az(az_distribution):
 
 def handle_azbalancer_create(spec):
     az_balancer = AZBalancer(spec)
+    
+    # Check if the deployment has only one replica
+    deployment = apps_v1.read_namespaced_deployment(az_balancer.deployment_name, az_balancer.namespace)
+    if deployment.spec.replicas != 1:
+        return {"status": "ignored", "reason": "Deployment does not have exactly one replica"}
+
     az_distribution = get_pod_az_distribution()
     balanced_az = select_balanced_az(az_distribution)
 
@@ -36,13 +43,13 @@ def handle_azbalancer_create(spec):
                 }
             }
         }
-        api = client.AppsV1Api()
-        api.patch_namespaced_deployment(
+        apps_v1.patch_namespaced_deployment(
             name=az_balancer.deployment_name,
             namespace=az_balancer.namespace,
             body=patch
         )
-    return {"status": "created", "balanced_az": balanced_az}
+        return {"status": "created", "balanced_az": balanced_az}
+    return {"status": "ignored", "reason": "No balanced AZ found"}
 
 def handle_azbalancer_update(spec):
     # Similar to create, but you might want to add additional logic for updates

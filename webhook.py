@@ -1,6 +1,5 @@
 from flask import Flask, request, jsonify
 from kubernetes import client, config
-import random
 import base64
 import json
 import os
@@ -10,6 +9,7 @@ app = Flask(__name__)
 # Load Kubernetes configuration
 config.load_incluster_config()
 v1 = client.CoreV1Api()
+apps_v1 = client.AppsV1Api()
 
 def get_pod_az_distribution():
     az_distribution = {}
@@ -26,6 +26,14 @@ def select_balanced_az(az_distribution):
     min_az = min(az_distribution, key=az_distribution.get)
     return min_az
 
+def is_single_replica_deployment(pod_name, namespace):
+    try:
+        deployment_name = "-".join(pod_name.split("-")[:-2])
+        deployment = apps_v1.read_namespaced_deployment(deployment_name, namespace)
+        return deployment.spec.replicas == 1
+    except client.exceptions.ApiException:
+        return False
+
 @app.route('/mutate', methods=['POST'])
 def mutate():
     request_info = request.json['request']
@@ -35,6 +43,12 @@ def mutate():
         return jsonify({"response": {"allowed": True}})
 
     pod_spec = request_info['object']['spec']
+    pod_name = request_info['object']['metadata']['name']
+    namespace = request_info['object']['metadata']['namespace']
+
+    # Check if it's a new pod for a single-replica deployment
+    if not is_single_replica_deployment(pod_name, namespace):
+        return jsonify({"response": {"allowed": True}})
 
     az_distribution = get_pod_az_distribution()
     balanced_az = select_balanced_az(az_distribution)
